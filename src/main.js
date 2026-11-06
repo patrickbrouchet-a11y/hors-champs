@@ -14,6 +14,19 @@ const placeholder = (caption, extraClass = '') => `
     <span class="ph__caption">${esc(caption)}</span>
   </div>`;
 
+// Média d'un emplacement : la photo si `image` est renseignée dans content.yaml, sinon le placeholder.
+// `source` indique l'origine (ex. "Photo d'illustration", "Image générée par IA") et s'affiche sur l'image.
+const media = (item = {}, extraClass = '', eager = false) => {
+  if (!item.image) return placeholder(item.placeholder, extraClass);
+  const src = `${import.meta.env.BASE_URL}${String(item.image).replace(/^\//, '')}`;
+  return `
+  <div class="photo ${extraClass}">
+    <img src="${esc(src)}" alt="${esc(item.alt || '')}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" />
+    ${item.source ? `<span class="photo__source">${esc(item.source)}</span>` : ''}
+    ${item.credit ? `<span class="photo__credit">${esc(item.credit)}</span>` : ''}
+  </div>`;
+};
+
 const sections = {
   announcement: () => `
     <div class="announcement">
@@ -45,7 +58,7 @@ const sections = {
           <div><dt class="label">Statut</dt><dd>${esc(drop.status)}</dd></div>
         </dl>
       </div>
-      ${placeholder(drop.hero_image.placeholder, 'hero__image')}
+      ${media(drop.hero_image, 'hero__image', true)}
     </section>`,
 
   manifesto: () => `
@@ -73,7 +86,7 @@ const sections = {
           .map(
             (look, i) => `
           <figure class="look look--${i + 1}">
-            ${placeholder(look.placeholder)}
+            ${media(look)}
             <figcaption><span class="label">${esc(look.label)}</span> ${esc(look.caption)}</figcaption>
           </figure>`
           )
@@ -92,7 +105,7 @@ const sections = {
           .map(
             (p, i) => `
           <li class="product">
-            ${placeholder(p.placeholder)}
+            ${media(p)}
             <div class="product__body">
               <p class="label">${String(i + 1).padStart(2, '0')} · ${esc(p.status)}</p>
               <h3 class="product__name">${esc(p.name)}</h3>
