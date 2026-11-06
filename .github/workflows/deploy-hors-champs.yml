@@ -1,9 +1,10 @@
-# Déploie la landing HORS CHAMP sur le VPS Hostinger à chaque merge sur main.
+# Déploie la landing HORS CHAMP sur le VPS Hostinger (SSH + rsync) à chaque merge sur main.
+# Site : https://horschamps.patrick-brouchet.cloud — dossier distant : /var/www/horschamps/
 # Secrets à créer dans GitHub > Settings > Secrets and variables > Actions :
-#   FTP_SERVER     ex. 123.45.67.89 (IP du VPS) ou ftp.ton-domaine.fr
-#   FTP_USERNAME   utilisateur FTP qui a les droits sur le dossier du sous-domaine
-#   FTP_PASSWORD   mot de passe de cet utilisateur
-#   FTP_REMOTE_DIR dossier racine du sous-domaine, terminé par "/" (ex. /var/www/drop/)
+#   SSH_HOST         IP du VPS
+#   SSH_USER         utilisateur de déploiement (ex. deploy)
+#   SSH_PRIVATE_KEY  clé privée dédiée au déploiement (contenu complet du fichier)
+#   SSH_KNOWN_HOSTS  sortie de : ssh-keyscan -t ed25519 <IP du VPS>
 name: Deploy hors-champs-jedha
 
 on:
@@ -17,6 +18,9 @@ on:
 concurrency:
   group: deploy-hors-champs
   cancel-in-progress: true
+
+env:
+  REMOTE_DIR: /var/www/horschamps/
 
 jobs:
   deploy:
@@ -36,11 +40,15 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Envoi de dist/ par FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./hors-champs-jedha/dist/
-          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+      - name: Préparer la clé SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Envoyer dist/ sur le VPS
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_DIR}"

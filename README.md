@@ -9,6 +9,7 @@ hors-champs-jedha/
 ├── index.html        # Coquille HTML + Google Fonts
 ├── content.yaml      # Source de vérité éditoriale (textes, produits, CTA)
 ├── DESIGN.md         # Source de vérité visuelle (palette, typo, grille, règles)
+├── DEPLOY.md         # Guide de déploiement sur le VPS
 ├── vite.config.js    # Config Vite + petit plugin pour importer le YAML
 ├── package.json
 ├── public/
@@ -31,8 +32,8 @@ Pour changer un texte, modifie `content.yaml` : la page se met à jour toute seu
 
 ## Déploiement (VPS Hostinger)
 
-Le workflow `.github/workflows/deploy-hors-champs.yml` construit le site et envoie `dist/` par FTP à chaque push sur `main` qui touche ce dossier.
+Site : https://horschamps.patrick-brouchet.cloud
 
-1. Créer le sous-domaine et son dossier racine sur le VPS (et un utilisateur FTP qui y a accès).
-2. Dans GitHub > Settings > Secrets and variables > Actions, ajouter `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `FTP_REMOTE_DIR` (chemin terminé par `/`).
-3. Merger sur `main` (ou lancer le workflow à la main depuis l'onglet Actions).
+Le workflow `.github/workflows/deploy-hors-champs.yml` construit le site et synchronise `dist/` vers `/var/www/horschamps/` sur le VPS (SSH + rsync) à chaque push sur `main` qui touche ce dossier.
+
+Installation du serveur, clé SSH et secrets GitHub : voir [DEPLOY.md](DEPLOY.md).
