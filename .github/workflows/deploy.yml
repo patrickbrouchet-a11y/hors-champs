@@ -1,10 +1,9 @@
-# Déploie la landing HORS CHAMP sur le VPS Hostinger (SSH + rsync) à chaque merge sur main.
-# Site : https://horschamps.patrick-brouchet.cloud — dossier distant : /var/www/horschamps/
-# Secrets à créer dans GitHub > Settings > Secrets and variables > Actions :
-#   SSH_HOST         IP du VPS
-#   SSH_USER         utilisateur de déploiement (ex. deploy)
-#   SSH_PRIVATE_KEY  clé privée dédiée au déploiement (contenu complet du fichier)
-#   SSH_KNOWN_HOSTS  sortie de : ssh-keyscan -t ed25519 <IP du VPS>
+# Déploie HORS CHAMP sur le VPS Hostinger (modèle Docker + Traefik) à chaque push sur main.
+# 1. Vérifie que le site se construit.
+# 2. Demande à Hostinger de reconstruire le projet Docker « horschamps » :
+#    le VPS récupère main depuis GitHub, construit l'image (Dockerfile) et relance le conteneur.
+# Secret requis (GitHub > Settings > Secrets and variables > Actions) :
+#   HOSTINGER_API_TOKEN   jeton API créé dans hPanel > Profil > API
 name: Deploy
 
 on:
@@ -17,7 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  REMOTE_DIR: /var/www/horschamps/
+  VPS_ID: 2127691
+  PROJECT: horschamps
 
 jobs:
   deploy:
@@ -30,34 +30,18 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
-      - run: npm run build
+      - name: Vérifier le build
+        run: npm ci && npm run build
 
-      - name: Préparer la clé SSH
-        run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-
-      - name: Vérifier la cohérence SSH_HOST / SSH_KNOWN_HOSTS
+      - name: Reconstruire le conteneur sur le VPS
         env:
-          HOST: ${{ secrets.SSH_HOST }}
+          TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
         run: |
-          # N'affiche aucune valeur secrète, seulement des indices.
-          echo "Lignes dans known_hosts : $(grep -c . ~/.ssh/known_hosts)"
-          echo "Lignes de commentaire (#) : $(grep -c '^#' ~/.ssh/known_hosts || true)"
-          echo "Types de clé trouvés : $(awk '!/^#/ && NF {print $2}' ~/.ssh/known_hosts | sort -u | tr '\n' ' ')"
-          if ssh-keygen -F "$HOST" -f ~/.ssh/known_hosts >/dev/null; then
-            echo "OK : SSH_KNOWN_HOSTS contient bien une clé pour SSH_HOST."
-          else
-            echo "::error::SSH_KNOWN_HOSTS ne contient aucune clé pour la valeur de SSH_HOST. Relance ssh-keyscan -t ed25519 avec exactement la même valeur que SSH_HOST (sans espace, sans http://, sans ssh://)."
-            echo "Longueur de SSH_HOST : ${#HOST} caractères (une IPv4 en fait 7 à 15)."
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Secret HOSTINGER_API_TOKEN manquant (voir DEPLOY.md)."
             exit 1
           fi
-
-      - name: Envoyer dist/ sur le VPS
-        run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
-            dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_DIR}"
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/json" \
+            "https://developers.hostinger.com/api/vps/v1/virtual-machines/${VPS_ID}/docker/${PROJECT}/update"

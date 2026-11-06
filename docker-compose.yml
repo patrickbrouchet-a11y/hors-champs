@@ -1,0 +1,14 @@
+# Projet Docker du VPS Hostinger (modèle Ubuntu + Docker + Traefik).
+# L'image est construite directement depuis la branche main de ce dépôt GitHub,
+# Traefik route horschamps.patrick-brouchet.cloud vers ce conteneur et gère le HTTPS.
+services:
+  web:
+    build: https://github.com/patrickbrouchet-a11y/hors-champs.git#main
+    pull_policy: build
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.horschamps.rule=Host(`horschamps.patrick-brouchet.cloud`)
+      - traefik.http.routers.horschamps.entrypoints=websecure
+      - traefik.http.routers.horschamps.tls.certresolver=letsencrypt
+      - traefik.http.services.horschamps.loadbalancer.server.port=80
