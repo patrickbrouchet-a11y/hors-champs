@@ -30,10 +30,10 @@ npm run build    # génère dist/
 
 Pour changer un texte, modifie `content.yaml` : la page se met à jour toute seule.
 
-## Déploiement (VPS Hostinger)
+## Déploiement (VPS Hostinger, Docker + Traefik)
 
 Site : https://horschamps.patrick-brouchet.cloud
 
-Le workflow `.github/workflows/deploy.yml` construit le site et synchronise `dist/` vers `/var/www/horschamps/` sur le VPS (SSH + rsync) à chaque push sur `main` qui touche ce dossier.
+À chaque push sur `main`, le workflow `.github/workflows/deploy.yml` vérifie le build puis demande au VPS de reconstruire le conteneur Docker `horschamps` depuis ce dépôt (`Dockerfile` + `docker-compose.yml`). Traefik gère le routage et le HTTPS.
 
-Installation du serveur, clé SSH et secrets GitHub : voir [DEPLOY.md](DEPLOY.md).
+Détails, secret à créer et dépannage : voir [DEPLOY.md](DEPLOY.md).

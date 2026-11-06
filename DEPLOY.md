@@ -1,145 +1,43 @@
 # Déployer HORS CHAMP sur le VPS Hostinger
 
-Cible : **https://horschamps.patrick-brouchet.cloud**, servi par Nginx sur un VPS Ubuntu 26.04, mis à jour automatiquement par GitHub Actions (SSH + rsync) à chaque merge sur `main`.
+Cible : **https://horschamps.patrick-brouchet.cloud** (DNS : enregistrement A `horschamps` → `2.24.140.160`).
 
-Remplace `IP_DU_VPS` par l'adresse IP affichée dans hPanel → **VPS → Vue d'ensemble**.
+Le VPS utilise le modèle Hostinger **Ubuntu 24.04 avec Docker et Traefik** :
 
----
+- **Traefik** occupe les ports 80/443, route chaque sous-domaine vers le bon conteneur et obtient les certificats HTTPS (Let's Encrypt) tout seul.
+- Le site tourne dans le projet Docker **`horschamps`** (hPanel → VPS → Docker Manager). Son `docker-compose.yml` est celui de ce dépôt : l'image est construite directement depuis la branche `main` sur GitHub grâce au `Dockerfile` (build Vite, puis Nginx).
 
-## 1. Créer le sous-domaine (DNS, dans hPanel)
+Rien à installer à la main sur le serveur (ni Nginx système, ni utilisateur `deploy`, ni clé SSH).
 
-1. hPanel → **Domaines** → `patrick-brouchet.cloud` → **DNS / Serveurs de noms**.
-2. **Ajouter un enregistrement** :
-   - Type : `A`
-   - Nom : `horschamps`
-   - Pointe vers : `IP_DU_VPS`
-   - TTL : par défaut
-3. Vérifie depuis ton ordinateur (après quelques minutes) :
-   ```bash
-   nslookup horschamps.patrick-brouchet.cloud
-   ```
-   La réponse doit afficher l'IP du VPS.
+## Déploiement automatique
 
-## 2. Préparer le serveur (une seule fois)
+À chaque push sur `main`, le workflow `.github/workflows/deploy.yml` :
 
-Connecte-toi en root (mot de passe ou clé définis dans hPanel → VPS → **Paramètres SSH**) :
+1. vérifie que le site se construit (`npm ci && npm run build`) ;
+2. appelle l'API Hostinger pour **mettre à jour** le projet Docker `horschamps`, ce qui reconstruit l'image depuis `main` et relance le conteneur.
 
-```bash
-ssh root@IP_DU_VPS
-```
+### Secret à créer (une seule fois)
 
-Installe Nginx, rsync et Certbot, puis ouvre le pare-feu :
+1. hPanel → avatar en haut à droite → **Profil → API** → **Générer un jeton**.
+2. GitHub → dépôt `hors-champs` → **Settings → Secrets and variables → Actions → New repository secret** :
+   - Name : `HOSTINGER_API_TOKEN`
+   - Secret : le jeton copié.
 
-```bash
-apt update && apt upgrade -y
-apt install -y nginx rsync certbot python3-certbot-nginx
-ufw allow OpenSSH
-ufw allow 'Nginx Full'
-ufw --force enable
-```
+Les anciens secrets `SSH_*` ne servent plus et peuvent être supprimés.
 
-Crée un utilisateur dédié au déploiement et le dossier du site :
+## Déploiement manuel
 
-```bash
-adduser --disabled-password --gecos "" deploy
-mkdir -p /var/www/horschamps
-chown -R deploy:deploy /var/www/horschamps
-chmod 755 /var/www/horschamps
-```
+hPanel → VPS → **Docker Manager** → projet `horschamps` → **Mettre à jour** (ou onglet Actions de GitHub → Deploy → Run workflow).
 
-## 3. Déclarer le site dans Nginx
+## Recréer le projet de zéro (après une réinstallation du VPS)
 
-```bash
-cat > /etc/nginx/sites-available/horschamps <<'NGINX'
-server {
-    listen 80;
-    listen [::]:80;
-    server_name horschamps.patrick-brouchet.cloud;
-
-    root /var/www/horschamps;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Les fichiers de dist/assets ont un hash dans leur nom : cache long
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-NGINX
-
-ln -s /etc/nginx/sites-available/horschamps /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
-```
-
-## 4. Activer le HTTPS (Let's Encrypt)
-
-Une fois le DNS propagé (étape 1) :
-
-```bash
-certbot --nginx -d horschamps.patrick-brouchet.cloud
-```
-
-Accepte la redirection HTTP → HTTPS. Le renouvellement est automatique.
-
-## 5. Créer la clé SSH de déploiement
-
-**Sur ton ordinateur** (pas sur le VPS) :
-
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/horschamps_deploy -N "" -C "github-actions-horschamps"
-cat ~/.ssh/horschamps_deploy.pub
-```
-
-Copie la ligne affichée, puis **sur le VPS** (en root) :
-
-```bash
-mkdir -p /home/deploy/.ssh
-echo "COLLE_ICI_LA_CLE_PUBLIQUE" >> /home/deploy/.ssh/authorized_keys
-chown -R deploy:deploy /home/deploy/.ssh
-chmod 700 /home/deploy/.ssh
-chmod 600 /home/deploy/.ssh/authorized_keys
-```
-
-Test depuis ton ordinateur :
-
-```bash
-ssh -i ~/.ssh/horschamps_deploy deploy@IP_DU_VPS "ls /var/www/horschamps"
-```
-
-Récupère aussi l'empreinte du serveur (pour le secret `SSH_KNOWN_HOSTS`) :
-
-```bash
-ssh-keyscan -t ed25519 IP_DU_VPS
-```
-
-## 6. Ajouter les secrets dans GitHub
-
-Dépôt `hors-champs` → **Settings → Secrets and variables → Actions → New repository secret** :
-
-| Nom               | Valeur                                                             |
-| ----------------- | ------------------------------------------------------------------ |
-| `SSH_HOST`        | `IP_DU_VPS`                                                        |
-| `SSH_USER`        | `deploy`                                                           |
-| `SSH_PRIVATE_KEY` | tout le contenu de `~/.ssh/horschamps_deploy` (la clé **privée**)  |
-| `SSH_KNOWN_HOSTS` | la ligne renvoyée par `ssh-keyscan` à l'étape 5                    |
-
-Ne partage jamais la clé privée ailleurs que dans ce secret.
-
-## 7. Déployer
-
-Merge la PR sur `main` (ou onglet **Actions → Deploy → Run workflow**). Le workflow construit le site, puis synchronise `dist/` vers `/var/www/horschamps/`.
-
-Ouvre https://horschamps.patrick-brouchet.cloud pour vérifier.
+Docker Manager → **Composer** → nom `horschamps` → coller le contenu de `docker-compose.yml`, déployer, puis cliquer **Mettre à jour** pour lancer la construction de l'image.
 
 ## En cas de problème
 
-| Symptôme                             | Piste                                                                 |
-| ------------------------------------ | --------------------------------------------------------------------- |
-| `Permission denied (publickey)`      | clé publique mal collée dans `authorized_keys`, ou droits incorrects  |
-| `Host key verification failed`       | secret `SSH_KNOWN_HOSTS` vide ou IP différente                        |
-| Page Nginx « Welcome »               | le site par défaut répond : vérifier `server_name` et `nginx -t`      |
-| Certbot échoue                       | DNS pas encore propagé, ou port 80 fermé dans le pare-feu             |
+| Symptôme                         | Piste                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| 404 de Traefik                   | le conteneur `horschamps` n'est pas démarré, ou le domaine des labels est différent |
+| Erreur de certificat             | attendre 1–2 minutes après le premier démarrage (Let's Encrypt)            |
+| Le workflow échoue sur l'API     | jeton absent, expiré ou révoqué : en recréer un dans hPanel                |
+| Le site ne change pas            | vérifier que le commit est bien sur `main` sur GitHub, puis relancer la mise à jour |
