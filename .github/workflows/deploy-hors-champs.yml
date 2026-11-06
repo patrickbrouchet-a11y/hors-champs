@@ -1,0 +1,46 @@
+# Déploie la landing HORS CHAMP sur le VPS Hostinger à chaque merge sur main.
+# Secrets à créer dans GitHub > Settings > Secrets and variables > Actions :
+#   FTP_SERVER     ex. 123.45.67.89 (IP du VPS) ou ftp.ton-domaine.fr
+#   FTP_USERNAME   utilisateur FTP qui a les droits sur le dossier du sous-domaine
+#   FTP_PASSWORD   mot de passe de cet utilisateur
+#   FTP_REMOTE_DIR dossier racine du sous-domaine, terminé par "/" (ex. /var/www/drop/)
+name: Deploy hors-champs-jedha
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'hors-champs-jedha/**'
+      - '.github/workflows/deploy-hors-champs.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hors-champs
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hors-champs-jedha
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hors-champs-jedha/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Envoi de dist/ par FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./hors-champs-jedha/dist/
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}

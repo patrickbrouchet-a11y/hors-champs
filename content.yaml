@@ -1,0 +1,123 @@
+# Source de vérité éditoriale de la landing HORS CHAMP.
+# Modifie les textes ici : la page se met à jour sans toucher au HTML.
+
+brand:
+  name: "HORS CHAMP"
+  tagline: "Des vêtements essentiels, construits pour vivre dehors."
+  territory:
+    - "sobriété parisienne"
+    - "volume contemporain"
+    - "imperfection assumée"
+    - "protection technique"
+    - "nostalgie sportswear"
+
+announcement:
+  text: "Drop 01 — Outside System · Date à confirmer · Inscription à l'accès anticipé ouverte"
+
+navigation:
+  - label: "Manifeste"
+    href: "#manifesto"
+  - label: "Lookbook"
+    href: "#lookbook"
+  - label: "Collection"
+    href: "#collection"
+  - label: "Construction"
+    href: "#details"
+
+drop:
+  label: "DROP 01"
+  title: "OUTSIDE SYSTEM"
+  name: "Drop 01 — Outside System"
+  status: "Collection de démonstration"
+  launch_date: "Date à confirmer"
+  availability: "Accès anticipé sur inscription"
+  primary_cta:
+    label: "Accéder au drop"
+    href: "#access"
+  secondary_cta:
+    label: "Découvrir la collection"
+    href: "#collection"
+  hero_image:
+    placeholder: "Silhouette en mouvement · béton · lumière froide"
+
+manifesto:
+  title: "Pas une saison. Un système."
+  text: "Des pièces simples, pensées pour les déplacements, les couches et les usages quotidiens."
+  points:
+    - "Construit pour être porté, usé, recontextualisé."
+    - "Des volumes amples, une coupe retenue."
+    - "La matière d'abord, le logo ensuite."
+
+lookbook:
+  title: "Silhouettes"
+  intro: "Cadrages partiels, matières en mouvement. Images à venir."
+  looks:
+    - label: "Look 01"
+      caption: "Field Hoodie · Signal Cap"
+      placeholder: "Silhouette en marche · bitume"
+    - label: "Look 02"
+      caption: "Layer Shell · Archive Tee"
+      placeholder: "Détail épaule · flash direct"
+    - label: "Look 03"
+      caption: "Archive Tee"
+      placeholder: "Cadrage partiel · vestiaire"
+    - label: "Look 04"
+      caption: "Layer Shell · Signal Cap"
+      placeholder: "Silhouette de dos · architecture urbaine"
+
+products:
+  - name: "Field Hoodie"
+    description: "Hoodie oversize en coton lourd, lavé et structuré."
+    status: "Produit de démonstration"
+    placeholder: "Détail molleton lavé"
+  - name: "Layer Shell"
+    description: "Une couche légère pensée pour protéger sans alourdir."
+    status: "Produit de démonstration"
+    placeholder: "Détail matière technique"
+  - name: "Archive Tee"
+    description: "Un t-shirt ample, marqué par un imprimé discret."
+    status: "Produit de démonstration"
+    placeholder: "Détail imprimé patiné"
+  - name: "Signal Cap"
+    description: "Une casquette souple avec un détail réfléchissant."
+    status: "Produit de démonstration"
+    placeholder: "Détail réfléchissant"
+
+details:
+  title: "Construction"
+  intro: "Matières exactes, tailles et finitions à confirmer avant le lancement."
+  items:
+    - label: "01 — Volume"
+      text: "Coupes amples et épaules tombantes, pensées pour superposer les couches."
+    - label: "02 — Matière"
+      text: "Cotons lourds lavés et tissus techniques légers. Composition à confirmer."
+    - label: "03 — Patine"
+      text: "Finitions légèrement usées, pour des pièces qui gagnent à être portées."
+    - label: "04 — Signal"
+      text: "Un détail réfléchissant discret, visible quand la lumière tombe."
+
+access:
+  title: "Le drop arrive bientôt."
+  text: "Inscris-toi pour recevoir l'accès anticipé et les informations de lancement."
+  input_label: "Ton adresse email"
+  button_label: "Rejoindre la liste"
+  confirmation_message: "Merci. Tu recevras les prochaines informations du drop."
+  note: "Formulaire de démonstration : aucune donnée n'est enregistrée."
+  backend_required: false
+
+footer:
+  links:
+    - label: "Collection"
+      href: "#collection"
+    - label: "Manifeste"
+      href: "#manifesto"
+    - label: "Contact"
+      href: "#"
+    - label: "Instagram"
+      href: "#"
+  legal:
+    - label: "Mentions légales"
+      href: "#"
+    - label: "Politique de confidentialité"
+      href: "#"
+  disclaimer: "HORS CHAMP est une marque fictive créée dans le cadre d'un atelier Jedha. Images : placeholders."
