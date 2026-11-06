@@ -5,7 +5,7 @@ Landing page de l'atelier Jedha « Product Building End to End — D4 ». Vite +
 ## Arborescence
 
 ```
-hors-champs-jedha/
+hors-champs/
 ├── index.html        # Coquille HTML + Google Fonts
 ├── content.yaml      # Source de vérité éditoriale (textes, produits, CTA)
 ├── DESIGN.md         # Source de vérité visuelle (palette, typo, grille, règles)
@@ -22,7 +22,7 @@ hors-champs-jedha/
 ## En local
 
 ```bash
-cd hors-champs-jedha
+cd hors-champs
 npm install
 npm run dev      # http://localhost:5173
 npm run build    # génère dist/
@@ -34,6 +34,6 @@ Pour changer un texte, modifie `content.yaml` : la page se met à jour toute seu
 
 Site : https://horschamps.patrick-brouchet.cloud
 
-Le workflow `.github/workflows/deploy-hors-champs.yml` construit le site et synchronise `dist/` vers `/var/www/horschamps/` sur le VPS (SSH + rsync) à chaque push sur `main` qui touche ce dossier.
+Le workflow `.github/workflows/deploy.yml` construit le site et synchronise `dist/` vers `/var/www/horschamps/` sur le VPS (SSH + rsync) à chaque push sur `main` qui touche ce dossier.
 
 Installation du serveur, clé SSH et secrets GitHub : voir [DEPLOY.md](DEPLOY.md).

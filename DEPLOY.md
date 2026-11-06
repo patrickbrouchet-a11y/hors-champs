@@ -118,7 +118,7 @@ ssh-keyscan -t ed25519 IP_DU_VPS
 
 ## 6. Ajouter les secrets dans GitHub
 
-Dépôt `PBuilder_Jehda` → **Settings → Secrets and variables → Actions → New repository secret** :
+Dépôt `hors-champs` → **Settings → Secrets and variables → Actions → New repository secret** :
 
 | Nom               | Valeur                                                             |
 | ----------------- | ------------------------------------------------------------------ |
@@ -131,7 +131,7 @@ Ne partage jamais la clé privée ailleurs que dans ce secret.
 
 ## 7. Déployer
 
-Merge la PR sur `main` (ou onglet **Actions → Deploy hors-champs-jedha → Run workflow**). Le workflow construit le site, puis synchronise `dist/` vers `/var/www/horschamps/`.
+Merge la PR sur `main` (ou onglet **Actions → Deploy → Run workflow**). Le workflow construit le site, puis synchronise `dist/` vers `/var/www/horschamps/`.
 
 Ouvre https://horschamps.patrick-brouchet.cloud pour vérifier.
 

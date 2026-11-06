@@ -5,14 +5,11 @@
 #   SSH_USER         utilisateur de déploiement (ex. deploy)
 #   SSH_PRIVATE_KEY  clé privée dédiée au déploiement (contenu complet du fichier)
 #   SSH_KNOWN_HOSTS  sortie de : ssh-keyscan -t ed25519 <IP du VPS>
-name: Deploy hors-champs-jedha
+name: Deploy
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'hors-champs-jedha/**'
-      - '.github/workflows/deploy-hors-champs.yml'
   workflow_dispatch:
 
 concurrency:
@@ -25,9 +22,6 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: hors-champs-jedha
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +29,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: hors-champs-jedha/package-lock.json
 
       - run: npm ci
       - run: npm run build
