@@ -1,5 +1,12 @@
 # Source de vérité éditoriale de la landing HORS CHAMP.
 # Modifie les textes ici : la page se met à jour sans toucher au HTML.
+#
+# PHOTOS : chaque emplacement (drop.hero_image, lookbook.looks, products) accepte
+#   image:  "images/nom-du-fichier.jpg"   # fichier placé dans public/images/
+#   alt:    "Description de la photo pour l'accessibilité"
+#   source: "Photo d'illustration"        # optionnel, obligatoire si stock ou IA
+#   credit: "Photo : Prénom Nom / Unsplash" # optionnel
+# Sans `image`, le placeholder s'affiche.
 
 brand:
   name: "HORS CHAMP"
